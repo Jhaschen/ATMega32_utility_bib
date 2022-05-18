@@ -11,7 +11,8 @@
 
  uint16_t ADC_read::adc_value(void)
  {
-
+   // PIN 7 als Eingang
+   CLR_BIT(DDRA,channel);
    //Pullup setzen
    SET_BIT(PORTA,channel);
    uint16_t adc_value=0;

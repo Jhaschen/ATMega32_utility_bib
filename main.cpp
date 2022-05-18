@@ -20,9 +20,9 @@ int main(void) {
    {
 
      Taster =B.Button_read();
-     sprintf(buffer," Taster %d gedrückt",Taster); // String Printf: schreibt eine Zeichenkette in den Buffer
+     sprintf(buffer," Taster %d gedrückt \n \r'",Taster); // String Printf: schreibt eine Zeichenkette in den Buffer
      Seriell.uart_puts(buffer);
-     Seriell.uart_puts("\n \r");
+     
 
      LED_PORT= ~Taster ;
 
