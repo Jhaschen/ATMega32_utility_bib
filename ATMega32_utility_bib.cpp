@@ -29,10 +29,10 @@
    ADCSRA = (1<<ADEN) | ( 1<<ADSC) | (1<< ADPS2) | (1<< ADPS1) | (1<< ADPS0) ;  // Statusregister A
 
    // AD-Wandlung starten
-   SET_BIT(ADCSRA,ADEN);
+   SET_BIT(ADCSRA,ADSC);
 
   // Warten bis die AD-Wandlung abgeschlossen ist
-    // while(BIT_IS_CLR(ADCSRA,ADIF)){}    // ADIF (ADC Interrupt Flag) wird gesetzt, wenn Wandlung angechlossen ist.
+    while(BIT_IS_CLR(ADCSRA,ADIF)){}    // ADIF (ADC Interrupt Flag) wird gesetzt, wenn Wandlung angechlossen ist.
 
      adc_value=ADCW;
 
@@ -53,7 +53,7 @@ int8_t Button::Button_read(void)
    if((analog7>=405) && (analog7<=406)) {button_pressed = 1;}
    else if((analog7>=336) && (analog7<=338)) {button_pressed = 2;}
    else if((analog7>=264) && (analog7<=266)) {button_pressed = 3;}
-   else if((analog7>=187) && (analog7<=188)) {button_pressed= 4;}
+   else if((analog7>=187) && (analog7<=189)) {button_pressed= 4;}
    else if((analog7>=104) && (analog7<=106)) {button_pressed= 5;}
    else     {button_pressed=-1;}
 
