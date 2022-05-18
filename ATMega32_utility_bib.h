@@ -66,4 +66,20 @@ public:
 };
 
 
+//UART Schnittstelle
+class UART{
+public:
+  UART(uint8_t _CharBits, uint8_t _ParBit, uint8_t _StopBits, uint32_t _Baudrate);
+  void uart_putc(char data);
+  void uart_puts(char* pstring);
+  char uart_getc(void);
+private:
+  uint8_t CharBits;
+  uint8_t ParBit;
+  uint8_t StopBits;
+  uint32_t Baudrate;
+};
+
+
+
 #endif // ATMEGA32_UTILITY_BIB
