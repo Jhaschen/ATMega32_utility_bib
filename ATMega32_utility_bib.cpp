@@ -5,9 +5,15 @@
  */
 
 
- #include "ATMega32_utility_bib.h"
+#include <stdarg.h>
+#include "ATMega32_utility_bib.h"
 
- ADC_read::ADC_read(uint8_t _channel):channel(_channel){}
+
+uint8_t ADC_read::channel; 
+
+void ADC_read::init(uint8_t _channel){
+   channel=_channel;
+ }
 
  uint16_t ADC_read::adc_value(void)
  {
@@ -40,15 +46,12 @@
      return adc_value;
  }
 
-
-Button::Button(){}
-
 int8_t Button::Button_read(void)
 {
  int8_t button_pressed=-1;
 
- ADC_read pin(7);
- uint16_t analog7 = pin.adc_value(); //ADC Wert lesen und zwischenspeichern
+ ADC_read::init(7);
+ uint16_t analog7 = ADC_read::adc_value(); //ADC Wert lesen und zwischenspeichern
 
  // Prüfe, welcher Taster gedrückt wurde (Spannungsteiler)
    if((analog7>=405) && (analog7<=406)) {button_pressed = 1;}
@@ -62,7 +65,7 @@ int8_t Button::Button_read(void)
 }
 
 //UART Schnittstelle
-UART::UART(uint8_t _CharBits, uint8_t _ParBit, uint8_t _StopBits, uint32_t _Baudrate):CharBits(_CharBits), ParBit(_ParBit), StopBits(_StopBits), Baudrate(_Baudrate)
+void UART::init(uint32_t Baudrate, uint8_t CharBits, uint8_t ParBit, uint8_t StopBits)
 {
   // Vorhandensein und Art des Paritäts-Bits festlegen:
   // Gerade   Parität: Anzahl der '1' wird auf gerade Anzahl ergänzt
@@ -135,17 +138,30 @@ while (BIT_IS_CLR(UCSRA,UDRE));
 UDR = data;
 }
 
-
-void UART::uart_puts(char* pstring)
+void UART::uart_printf(const char* format, ...)
 {
- char* pdata = pstring;
+  char buf[30];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buf, sizeof(buf), format, args);
+  va_end(args);
+}
 
- while (*pdata !=0) {
-   uart_putc(*pdata);
-   pdata++;
+
+
+void UART::uart_puts(const char* pstring)
+{
+ while (*pstring !=0) {
+   uart_putc(*pstring);
+   pstring++;
  }
 }
 
+void UART::uart_println(const char* pstring)
+ {
+   uart_puts(pstring);
+   uart_puts("\r\n");
+ }
 
  char UART::uart_getc(void)
  {
