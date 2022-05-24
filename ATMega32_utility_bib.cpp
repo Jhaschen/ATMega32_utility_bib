@@ -145,6 +145,7 @@ void UART::uart_printf(const char* format, ...)
   va_start(args, format);
   vsnprintf(buf, sizeof(buf), format, args);
   va_end(args);
+  uart_puts(buf);
 }
 
 
