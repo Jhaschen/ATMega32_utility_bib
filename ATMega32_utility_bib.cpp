@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include "ATMega32_utility_bib.h"
+#include "user_button_values.h"
 
 
 uint8_t ADC_read::channel; 
@@ -54,12 +55,12 @@ int8_t Button::Button_read(void)
  uint16_t analog7 = ADC_read::adc_value(); //ADC Wert lesen und zwischenspeichern
 
  // Prüfe, welcher Taster gedrückt wurde (Spannungsteiler)
-   if((analog7>=405) && (analog7<=406)) {button_pressed = 1;}
-   else if((analog7>=336) && (analog7<=338)) {button_pressed = 2;}
-   else if((analog7>=264) && (analog7<=266)) {button_pressed = 3;}
-   else if((analog7>=187) && (analog7<=189)) {button_pressed= 4;}
-   else if((analog7>=104) && (analog7<=106)) {button_pressed= 5;}
-   else     {button_pressed=-1;}
+   if      ( (analog7 >= ATMEGA32_USER_BUTTON1_LOW) && (analog7 <= ATMEGA32_USER_BUTTON1_HIGH ) ) {button_pressed = 1;}
+   else if ( (analog7 >= ATMEGA32_USER_BUTTON2_LOW) && (analog7 <= ATMEGA32_USER_BUTTON2_HIGH ) ) {button_pressed = 2;}
+   else if ( (analog7 >= ATMEGA32_USER_BUTTON3_LOW) && (analog7 <= ATMEGA32_USER_BUTTON3_HIGH) ) {button_pressed = 3;}
+   else if ( (analog7 >= ATMEGA32_USER_BUTTON4_LOW) && (analog7 <= ATMEGA32_USER_BUTTON4_HIGH) ) {button_pressed= 4;}
+   else if ( (analog7 >= ATMEGA32_USER_BUTTON5_LOW) && (analog7 <= ATMEGA32_USER_BUTTON5_HIGH) ) {button_pressed= 5;}
+   else {button_pressed=-1;}
 
    return button_pressed;
 }
