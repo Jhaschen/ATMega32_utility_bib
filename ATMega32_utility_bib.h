@@ -15,6 +15,7 @@
 #endif
 
 // Bibliotheken einbinden
+#include <avr/pgmspace.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -75,4 +76,34 @@ public:
   static char uart_getc(void);
 };
 
+
+// Timer0,
+class Timer0
+{
+  static void init();
+  static unsigned long millis();
+  static unsigned long micros();
+  static void delay(unsigned long ms);
+  static void delayMicroseconds(unsigned int us);
+};
+
+// Arduino compatibility functions:
+uint8_t digitalPinToInterrupt(uint8_t interruptPin);
+void pinMode(uint8_t pin, uint8_t mode);
+void digitalWrite(uint8_t pin, uint8_t value);
+uint8_t digitalRead(uint8_t pin);
+void tone(uint8_t pin, unsigned int frequency, unsigned long duration);
+void noTone(uint8_t pin);
+void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode);
+void detachInterrupt(uint8_t intterupt);
+void yield();
+void delay(unsigned long ms);
+void delayMicroseconds(unsigned int us);
+unsigned long millis();
+unsigned long micros();
+void SPIbegin();
+void SPIbeginTransaction();
+uint8_t SPItransfer (uint8_t b);
+void SPIendTransaction();
+void SPIend();
 #endif // ATMEGA32_UTILITY_BIB

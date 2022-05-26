@@ -177,3 +177,90 @@ void UART::uart_println(const char* pstring)
 
  return(data);
  }
+
+void Timer0::init() {
+
+}
+
+
+
+
+uint8_t digitalPinToInterrupt(uint8_t interruptPin) {
+  return 0;
+}
+
+void pinMode(uint8_t pin, uint8_t mode) {}
+
+void digitalWrite(uint8_t pin, uint8_t value) {}
+
+uint8_t digitalRead(uint8_t pin) {
+  return 0;
+}
+
+void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {}
+
+void noTone(uint8_t pin) {}
+
+void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode) {}
+
+void detachInterrupt(uint8_t intterupt) {}
+
+void yield() {}
+
+void delay(unsigned long ms) {}
+
+void delayMicroseconds(unsigned int us) {}
+
+unsigned long millis() {
+  return 0;
+}
+
+unsigned long micros() {
+  return 0;
+}
+
+void SPIbegin() {}
+
+void SPIbeginTransaction() {}
+
+uint8_t SPItransfer (uint8_t b) {
+  return 0;
+}
+
+void SPIendTransaction() {
+
+}
+
+void SPIend() {
+
+}
+#ifndef _FCPU
+  #define _FCPU 16000000ul
+#endif
+
+#define MICROSECONDS_PER_TIMER0_OVERFLOW (_FCPU/1000000)
+#define MILLISECONDS_PER_TIMER0_OVERFLOW (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
+
+// From: https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/wiring.c
+// the fractional number of milliseconds per timer0 overflow. we shift right
+// by three to fit these numbers into a byte. (for the clock speeds we care
+// about - 8 and 16 MHz - this doesn't lose precision.)
+#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
+#define FRACT_MAX (1000 >> 3)
+
+// global variables:
+volatile unsigned long _overflow_count = 0;
+volatile unsigned long _millis = 0;
+static unsigned char _fract = 0;
+
+ISR(TIMER0_OVF_vect) {
+  _millis = _millis + MILLISECONDS_PER_TIMER0_OVERFLOW;
+  _fract = _fract + FRACT_INC;
+
+  if (_fract >=FRACT_MAX) {
+    _fract = _fract - FRACT_MAX;
+    _millis++;
+  }
+
+  _overflow_count++;
+}
