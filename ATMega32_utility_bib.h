@@ -37,13 +37,13 @@
 #include <stdlib.h>
 
 // Makro definitionen
-#define SET_BIT(REG, BIT) REG |= (1 << BIT)            // Makro setzen des Bit BIT in Register REG
-#define CLR_BIT(REG, BIT) REG &= ~(1 << BIT)           // Makro löschen des Bit BIT in Register REG
-#define TGL_BIT(REG, BIT) REG ^= (1 << BIT)            // Makro komplemntieren des Bit BIT in Register REG
-#define CLR_LED(REG, BIT) REG |= (1 << BIT)            // Makro LED ausschalten (umgekehrte Logik)
-#define SET_LED(REG, BIT) REG &= ~(1 << BIT)           // Makro LED einschalten
-#define BIT_IS_SET(REG, BIT) ((REG & (1 << BIT)) != 0) // Testen, ob Bit BIT im Register REG gesetzt ist (1)
-#define BIT_IS_CLR(REG, BIT) ((REG & (1 << BIT)) == 0) // Testen, ob Bit BIT im Register REG  nicht gesetzt ist (0)
+#define SET_BIT(REG, BIT) REG |= (1 << (BIT))            // Makro setzen des Bit BIT in Register REG
+#define CLR_BIT(REG, BIT) REG &= ~(1 << (BIT))           // Makro löschen des Bit BIT in Register REG
+#define TGL_BIT(REG, BIT) REG ^= (1 << (BIT))            // Makro komplemntieren des Bit BIT in Register REG
+#define CLR_LED(REG, BIT) REG |= (1 << (BIT))            // Makro LED ausschalten (umgekehrte Logik)
+#define SET_LED(REG, BIT) REG &= ~(1 << (BIT))           // Makro LED einschalten
+#define BIT_IS_SET(REG, BIT) ((REG & (1 << (BIT))) != 0) // Testen, ob Bit BIT im Register REG gesetzt ist (1)
+#define BIT_IS_CLR(REG, BIT) ((REG & (1 << (BIT))) == 0) // Testen, ob Bit BIT im Register REG  nicht gesetzt ist (0)
 
 #define LED_PORT PORTC
 
@@ -83,6 +83,54 @@
 #define CHANGE  (1)
 #define FALLING (2)
 #define RISING  (3)
+
+// Pin numbering:
+// Port A 0x0001xxxx
+// Port B 0x0010xxxx
+// Port C 0x0100xxxx
+// Port D 0x1000xxxx
+// least-significant 4 bits: Pin ID as in datasheet
+
+#define PIN_PORTA  (0x10)
+#define PIN_PORTB  (0x20)
+#define PIN_PORTC  (0x40)
+#define PIN_PORTD  (0x80)
+
+#define PIN_PA0 (PIN_PORTA | 0)
+#define PIN_PA1 (PIN_PORTA | 1)
+#define PIN_PA2 (PIN_PORTA | 2)
+#define PIN_PA3 (PIN_PORTA | 3)
+#define PIN_PA4 (PIN_PORTA | 4)
+#define PIN_PA5 (PIN_PORTA | 5)
+#define PIN_PA6 (PIN_PORTA | 6)
+#define PIN_PA7 (PIN_PORTA | 7)
+
+#define PIN_PB0 (PIN_PORTB | 0)
+#define PIN_PB1 (PIN_PORTB | 1)
+#define PIN_PB2 (PIN_PORTB | 2)
+#define PIN_PB3 (PIN_PORTB | 3)
+#define PIN_PB4 (PIN_PORTB | 4)
+#define PIN_PB5 (PIN_PORTB | 5)
+#define PIN_PB6 (PIN_PORTB | 6)
+#define PIN_PB7 (PIN_PORTB | 7)
+
+#define PIN_PC0 (PIN_PORTC | 0)
+#define PIN_PC1 (PIN_PORTC | 1)
+#define PIN_PC2 (PIN_PORTC | 2)
+#define PIN_PC3 (PIN_PORTC | 3)
+#define PIN_PC4 (PIN_PORTC | 4)
+#define PIN_PC5 (PIN_PORTC | 5)
+#define PIN_PC6 (PIN_PORTC | 6)
+#define PIN_PC7 (PIN_PORTC | 7)
+
+#define PIN_PD0 (PIN_PORTD | 0)
+#define PIN_PD1 (PIN_PORTD | 1)
+#define PIN_PD2 (PIN_PORTD | 2)
+#define PIN_PD3 (PIN_PORTD | 3)
+#define PIN_PD4 (PIN_PORTD | 4)
+#define PIN_PD5 (PIN_PORTD | 5)
+#define PIN_PD6 (PIN_PORTD | 6)
+#define PIN_PD7 (PIN_PORTD | 7)
 
 // ADC_init und ADC_read
 class ADC_read
