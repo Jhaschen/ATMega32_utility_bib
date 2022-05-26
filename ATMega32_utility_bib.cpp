@@ -149,6 +149,15 @@ void UART::uart_printf(const char* format, ...)
   uart_puts(buf);
 }
 
+void UART::uart_printf_P(const char* format, ...)
+{
+  char buf[30];
+  va_list args;
+  va_start(args, format);
+  vsnprintf_P(buf, sizeof(buf), format, args);
+  va_end(args);
+  uart_puts(buf);
+}
 
 
 void UART::uart_puts(const char* pstring)
@@ -167,97 +176,240 @@ void UART::uart_println(const char* pstring)
 
  char UART::uart_getc(void)
  {
- char data;
- // Prüfe ob das Empfangsregister gefüllt ist
- while (BIT_IS_CLR(UCSRA,RXC)) {
+  char data;
+  // Prüfe ob das Empfangsregister gefüllt ist
+  while (BIT_IS_CLR(UCSRA,RXC)) {
    /* code */
- }
- //Daten einlesen
- data=UDR;
+  }
+  //Daten einlesen
+  data=UDR;
 
- return(data);
- }
+  return(data);
+}
 
 void Timer0::init() {
-
+  // Prescaler 64  
+  SET_BIT(TCCR0, CS01);
+	SET_BIT(TCCR0, CS00);
+  // Timer overflow interrupt
+  SET_BIT(TIMSK, TOIE0);
+  sei();
 }
 
 
+/***** Arduino comapt vars and functions *******/
 
+// Pin numbering:
+// Port A 0x0001xxxx
+// Port B 0x0010xxxx
+// Port C 0x0100xxxx
+// Port D 0x1000xxxx
+// least-significant 4 bits: Pin ID as in datasheet
 
-uint8_t digitalPinToInterrupt(uint8_t interruptPin) {
-  return 0;
-}
+#define PIN_PORTA  (0x10)
+#define PIN_PORTB  (0x20)
+#define PIN_PORTC  (0x40)
+#define PIN_PORTD  (0x80)
 
-void pinMode(uint8_t pin, uint8_t mode) {}
+#define PIN_PA0 (PIN_PORTA | 0)
+#define PIN_PA1 (PIN_PORTA | 1)
+#define PIN_PA2 (PIN_PORTA | 2)
+#define PIN_PA3 (PIN_PORTA | 3)
+#define PIN_PA4 (PIN_PORTA | 4)
+#define PIN_PA5 (PIN_PORTA | 5)
+#define PIN_PA6 (PIN_PORTA | 6)
+#define PIN_PA7 (PIN_PORTA | 7)
 
-void digitalWrite(uint8_t pin, uint8_t value) {}
+#define PIN_PB0 (PIN_PORTB | 0)
+#define PIN_PB1 (PIN_PORTB | 1)
+#define PIN_PB2 (PIN_PORTB | 2)
+#define PIN_PB3 (PIN_PORTB | 3)
+#define PIN_PB4 (PIN_PORTB | 4)
+#define PIN_PB5 (PIN_PORTB | 5)
+#define PIN_PB6 (PIN_PORTB | 6)
+#define PIN_PB7 (PIN_PORTB | 7)
 
-uint8_t digitalRead(uint8_t pin) {
-  return 0;
-}
+#define PIN_PC0 (PIN_PORTC | 0)
+#define PIN_PC1 (PIN_PORTC | 1)
+#define PIN_PC2 (PIN_PORTC | 2)
+#define PIN_PC3 (PIN_PORTC | 3)
+#define PIN_PC4 (PIN_PORTC | 4)
+#define PIN_PC5 (PIN_PORTC | 5)
+#define PIN_PC6 (PIN_PORTC | 6)
+#define PIN_PC7 (PIN_PORTC | 7)
 
-void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {}
-
-void noTone(uint8_t pin) {}
-
-void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode) {}
-
-void detachInterrupt(uint8_t intterupt) {}
-
-void yield() {}
-
-void delay(unsigned long ms) {}
-
-void delayMicroseconds(unsigned int us) {}
-
-unsigned long millis() {
-  return 0;
-}
-
-unsigned long micros() {
-  return 0;
-}
-
-void SPIbegin() {}
-
-void SPIbeginTransaction() {}
-
-uint8_t SPItransfer (uint8_t b) {
-  return 0;
-}
-
-void SPIendTransaction() {
-
-}
-
-void SPIend() {
-
-}
-#ifndef _FCPU
-  #define _FCPU 16000000ul
-#endif
-
-#define MICROSECONDS_PER_TIMER0_OVERFLOW (_FCPU/1000000)
-#define MILLISECONDS_PER_TIMER0_OVERFLOW (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
-
-// From: https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/wiring.c
-// the fractional number of milliseconds per timer0 overflow. we shift right
-// by three to fit these numbers into a byte. (for the clock speeds we care
-// about - 8 and 16 MHz - this doesn't lose precision.)
-#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
-#define FRACT_MAX (1000 >> 3)
+#define PIN_PD0 (PIN_PORTD | 0)
+#define PIN_PD1 (PIN_PORTD | 1)
+#define PIN_PD2 (PIN_PORTD | 2)
+#define PIN_PD3 (PIN_PORTD | 3)
+#define PIN_PD4 (PIN_PORTD | 4)
+#define PIN_PD5 (PIN_PORTD | 5)
+#define PIN_PD6 (PIN_PORTD | 6)
+#define PIN_PD7 (PIN_PORTD | 7)
 
 // global variables:
 volatile unsigned long _overflow_count = 0;
 volatile unsigned long _millis = 0;
 static unsigned char _fract = 0;
 
+uint8_t digitalPinToInterrupt(uint8_t interruptPin) {
+  switch (interruptPin) {
+    case PIN_PD2:
+      return 0;
+    case PIN_PD3:
+      return 1;
+    case PIN_PB2:
+      return 2;
+  }
+  return 0xFF;
+}
+
+void pinMode(uint8_t pin, uint8_t mode) {
+  switch (pin>>4) {
+    case 0x1:
+      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRA, pin & 0x07);
+      else if (mode==OUTPUT) SET_BIT(DDRA, pin & 0x07);
+      if (mode==INPUT_PULLUP) SET_BIT(PORTA, pin & 0x07);
+      break;
+    case 0x2:
+      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRB, pin & 0x07);
+      else if (mode==OUTPUT) SET_BIT(DDRB, pin & 0x07);
+      if (mode==INPUT_PULLUP) SET_BIT(PORTB, pin & 0x07);
+      break;
+    case 0x4:
+      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRC, pin & 0x07);
+      else if (mode==OUTPUT) SET_BIT(DDRC, pin & 0x07);
+      if (mode==INPUT_PULLUP) SET_BIT(PORTC, pin & 0x07);
+      break;
+    case 0x8:
+      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRD, pin & 0x07);
+      else if (mode==OUTPUT) SET_BIT(DDRD, pin & 0x07);
+      if (mode==INPUT_PULLUP) SET_BIT(PORTD, pin & 0x07);
+  }
+}
+
+void digitalWrite(uint8_t pin, uint8_t value) {
+  switch (pin>>4) {
+    case 0x1:
+      if (value) SET_BIT(PORTA, pin & 0x7); else CLR_BIT(PORTA, pin & 0x7);
+      break;
+    case 0x2:
+      if (value) SET_BIT(PORTB, pin & 0x7); else CLR_BIT(PORTB, pin & 0x7);
+      break;
+    case 0x4:
+      if (value) SET_BIT(PORTC, pin & 0x7); else CLR_BIT(PORTC, pin & 0x7);
+      break;
+    case 0x8:
+      if (value) SET_BIT(PORTD, pin & 0x7); else CLR_BIT(PORTD, pin & 0x7);
+      break;
+  }
+  //UART::uart_printf_P(PSTR("called: digitalWrite\r\n"));
+}
+
+uint8_t digitalRead(uint8_t pin) {
+  switch (pin>>4) {
+    case 0x1:
+      return (BIT_IS_SET(PINA, pin & 0x7));
+    case 0x2:
+      return (BIT_IS_SET(PINB, pin & 0x7));
+    case 0x4:
+      return (BIT_IS_SET(PINC, pin &0x7));
+    case 0x8:
+      return (BIT_IS_SET(PIND, pin &0x7));
+  }
+  //UART::uart_printf_P(PSTR("called: digitalRead\r\n"));
+  return 0;
+}
+
+void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {
+  UART::uart_printf_P(PSTR("called: tone\r\n"));
+}
+
+void noTone(uint8_t pin) {
+  UART::uart_printf_P(PSTR("called: noTone\r\n"));
+}
+
+void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode) {
+  UART::uart_printf_P(PSTR("called: attachInterrupt\r\n"));
+}
+
+void detachInterrupt(uint8_t intterupt) {
+  UART::uart_printf_P(PSTR("called: detachInterrupt\r\n"));
+}
+
+void yield() {
+  // does nothing opn this platform
+}
+
+void delay(unsigned long ms) {
+  uint32_t start = micros();
+
+	while (ms > 0) {
+		while ( ms > 0 && (micros() - start) >= 1000) {
+			ms--;
+			start += 1000;
+		}
+	}
+}
+
+void delayMicroseconds(unsigned int us) {
+  if (us <= 1) return;
+  us <<= 2; // convert us into cycles: 1 us == 4 cycles
+  // busy wait
+	__asm__ __volatile__ (
+		"1: sbiw %0,1" "\n\t" // 2 cycles
+		"brne 1b" : "=w" (us) : "0" (us) // 2 cycles
+	);
+}
+
+unsigned long millis() {
+  unsigned long m;
+	uint8_t oldSREG = SREG;
+	cli();
+	m = _millis;
+	SREG = oldSREG;
+
+	return m;
+}
+
+unsigned long micros() {
+  unsigned long m;
+	uint8_t oldSREG = SREG, t;
+	cli();
+	m = _overflow_count;
+	t = TCNT0;
+	if ((TIFR & _BV(TOV0)) && (t < 255)) m++;
+	SREG = oldSREG;
+	return ((m << 8) + t) * 4;
+}
+
+void SPIbegin() {
+  UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
+}
+
+void SPIbeginTransaction() {
+  UART::uart_printf_P(PSTR("called: SPIbeginTransaction\r\n"));
+}
+
+uint8_t SPItransfer (uint8_t b) {
+  UART::uart_printf_P(PSTR("called: SPItransfer\r\n"));
+  return 0;
+}
+
+void SPIendTransaction() {
+  UART::uart_printf_P(PSTR("called: SPIendTransaction\r\n"));
+}
+
+void SPIend() {
+  UART::uart_printf_P(PSTR("called: SPIend\r\n"));
+}
+
+/************************ ISR timer0 *****************/
 ISR(TIMER0_OVF_vect) {
   _millis = _millis + MILLISECONDS_PER_TIMER0_OVERFLOW;
   _fract = _fract + FRACT_INC;
 
-  if (_fract >=FRACT_MAX) {
+  if (_fract >= FRACT_MAX) {
     _fract = _fract - FRACT_MAX;
     _millis++;
   }

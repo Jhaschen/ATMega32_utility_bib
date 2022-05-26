@@ -14,6 +14,20 @@
 #define __AVR_ATmega32__ // ATMega32 Bibliothek
 #endif
 
+#define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
+#define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
+#define microsecondsToClockCycles(a) ( (a) * clockCyclesPerMicrosecond() )
+
+#define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
+#define MILLISECONDS_PER_TIMER0_OVERFLOW (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
+
+// From: https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/wiring.c
+// the fractional number of milliseconds per timer0 overflow. we shift right
+// by three to fit these numbers into a byte. (for the clock speeds we care
+// about - 8 and 16 MHz - this doesn't lose precision.)
+#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
+#define FRACT_MAX (1000 >> 3)
+
 // Bibliotheken einbinden
 #include <avr/pgmspace.h>
 #include <avr/io.h>
@@ -45,6 +59,31 @@
 #define USART_EVEN_PARITY 1
 #define USART_ODD_PARITY 2
 
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+//#define abs(x) ((x)>0?(x):-(x))
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+#define radians(deg) ((deg)*DEG_TO_RAD)
+#define degrees(rad) ((rad)*RAD_TO_DEG)
+#define sq(x) ((x)*(x))
+
+#define HIGH (1)
+#define LOW (0)
+
+// decimal
+#define DEC    (10)
+
+// I/O
+#define INPUT (0)
+#define OUTPUT (1)
+#define INPUT_PULLUP (2)
+
+// Taktflanken:
+#define CHANGE  (1)
+#define FALLING (2)
+#define RISING  (3)
+
 // ADC_init und ADC_read
 class ADC_read
 {
@@ -72,6 +111,7 @@ public:
   static void uart_putc(char data);
   static void uart_puts(const char *pstring);
   static void uart_printf(const char* format, ...);
+  static void uart_printf_P(const char* format, ...);
   static void uart_println(const char *pstring);
   static char uart_getc(void);
 };
@@ -80,6 +120,7 @@ public:
 // Timer0,
 class Timer0
 {
+public:
   static void init();
   static unsigned long millis();
   static unsigned long micros();
