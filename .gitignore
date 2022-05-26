@@ -7,3 +7,4 @@
 *.lst
 *.o
 *.hex
+user_button_values.h
