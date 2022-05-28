@@ -132,6 +132,8 @@
 #define PIN_PD6 (PIN_PORTD | 6)
 #define PIN_PD7 (PIN_PORTD | 7)
 
+typedef void (*voidFuncPtr)(void);
+
 // ADC_init und ADC_read
 class ADC_read
 {
@@ -174,25 +176,38 @@ public:
   static unsigned long micros();
   static void delay(unsigned long ms);
   static void delayMicroseconds(unsigned int us);
+  volatile static unsigned long _overflow_count;
+  volatile static unsigned long _millis;
+  volatile static unsigned char _fract;
+};
+
+class SPI
+{
+public:
+  static void SPIbegin();
+  static void SPIbeginTransaction();
+  static uint8_t SPItransfer (uint8_t b);
+  static void SPIendTransaction();
+  static void SPIend();
+};
+
+class IO {
+public:
+  static uint8_t digitalPinToInterrupt(uint8_t interruptPin);
+  static void pinMode(uint8_t pin, uint8_t mode);
+  static void digitalWrite(uint8_t pin, uint8_t value);
+  static uint8_t digitalRead(uint8_t pin);
+  static void tone(uint8_t pin, unsigned int frequency, unsigned long duration);
+  static void noTone(uint8_t pin);
+  static void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode);
+  static void detachInterrupt(uint8_t intterupt);
+
+  static volatile voidFuncPtr intFunc[3];
+
+  static void nothing(); // bogus function, if no real function is attached
 };
 
 // Arduino compatibility functions:
-uint8_t digitalPinToInterrupt(uint8_t interruptPin);
-void pinMode(uint8_t pin, uint8_t mode);
-void digitalWrite(uint8_t pin, uint8_t value);
-uint8_t digitalRead(uint8_t pin);
-void tone(uint8_t pin, unsigned int frequency, unsigned long duration);
-void noTone(uint8_t pin);
-void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode);
-void detachInterrupt(uint8_t intterupt);
-void yield();
-void delay(unsigned long ms);
-void delayMicroseconds(unsigned int us);
-unsigned long millis();
-unsigned long micros();
-void SPIbegin();
-void SPIbeginTransaction();
-uint8_t SPItransfer (uint8_t b);
-void SPIendTransaction();
-void SPIend();
+//static void yield();
+ 
 #endif // ATMEGA32_UTILITY_BIB

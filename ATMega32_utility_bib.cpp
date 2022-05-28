@@ -141,7 +141,7 @@ UDR = data;
 
 void UART::uart_printf(const char* format, ...)
 {
-  char buf[30];
+  char buf[50];
   va_list args;
   va_start(args, format);
   vsnprintf(buf, sizeof(buf), format, args);
@@ -151,7 +151,7 @@ void UART::uart_printf(const char* format, ...)
 
 void UART::uart_printf_P(const char* format, ...)
 {
-  char buf[30];
+  char buf[50];
   va_list args;
   va_start(args, format);
   vsnprintf_P(buf, sizeof(buf), format, args);
@@ -187,6 +187,10 @@ void UART::uart_println(const char* pstring)
   return(data);
 }
 
+ volatile unsigned long Timer0::_overflow_count = 0;
+ volatile unsigned long Timer0::_millis = 0;
+ volatile unsigned char Timer0::_fract = 0;
+
 void Timer0::init() {
   // Prescaler 64  
   SET_BIT(TCCR0, CS01);
@@ -196,15 +200,63 @@ void Timer0::init() {
   sei();
 }
 
+/************************ ISR timer0 *****************/
+ISR(TIMER0_OVF_vect) {
+  Timer0::_millis = Timer0::_millis + MILLISECONDS_PER_TIMER0_OVERFLOW;
+  Timer0::_fract = Timer0::_fract + FRACT_INC;
 
-/***** Arduino comapt vars and functions *******/
+  if (Timer0::_fract >= FRACT_MAX) {
+    Timer0::_fract = Timer0::_fract - FRACT_MAX;
+    Timer0::_millis++;
+  }
 
-// global variables:
-volatile unsigned long _overflow_count = 0;
-volatile unsigned long _millis = 0;
-static unsigned char _fract = 0;
+  Timer0::_overflow_count++;
+}
 
-uint8_t digitalPinToInterrupt(uint8_t interruptPin) {
+void Timer0::delay(unsigned long ms) {
+  uint32_t start = micros();
+
+	while (ms > 0) {
+		while ( ms > 0 && (micros() - start) >= 1000) {
+			ms--;
+			start += 1000;
+		}
+	}
+}
+
+void Timer0::delayMicroseconds(unsigned int us) {
+  if (us <= 1) return;
+  us <<= 2; // convert us into cycles: 1 us == 4 cycles
+  // busy wait
+	__asm__ __volatile__ (
+		"1: sbiw %0,1" "\n\t" // 2 cycles
+		"brne 1b" : "=w" (us) : "0" (us) // 2 cycles
+	);
+}
+
+unsigned long Timer0::millis() {
+  unsigned long m;
+	uint8_t oldSREG = SREG;
+	cli();
+	m = _millis;
+	SREG = oldSREG;
+	return m;
+}
+
+unsigned long Timer0::micros() {
+  unsigned long m;
+	uint8_t oldSREG = SREG, t;
+	cli();
+	m = _overflow_count;
+	t = TCNT0;
+	if ((TIFR & _BV(TOV0)) && (t < 255)) m++;
+	SREG = oldSREG;
+	return ((m << 8) + t) * 4;
+}
+
+
+uint8_t IO::digitalPinToInterrupt(uint8_t interruptPin) {
+  UART::uart_printf_P(PSTR("called: digitalPinToInterrupt\r\n"));
   switch (interruptPin) {
     case PIN_PD2:
       return 0;
@@ -216,7 +268,8 @@ uint8_t digitalPinToInterrupt(uint8_t interruptPin) {
   return 0xFF;
 }
 
-void pinMode(uint8_t pin, uint8_t mode) {
+void IO::pinMode(uint8_t pin, uint8_t mode) {
+  //UART::uart_printf_P(PSTR("called: pinMode(pin==%d, port==%d, mode==%d)\r\n"), pin&0x7, pin>>4, mode);
   switch (pin>>4) {
     case 0x1:
       if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRA, pin & 0x07);
@@ -240,135 +293,150 @@ void pinMode(uint8_t pin, uint8_t mode) {
   }
 }
 
-void digitalWrite(uint8_t pin, uint8_t value) {
+void IO::digitalWrite(uint8_t pin, uint8_t value) {
+  //UART::uart_printf_P(PSTR("called: digitalWrite(pin==%d, port==%d, val==%d)\r\n"), pin&0x7, pin>>4, value);
   switch (pin>>4) {
     case 0x1:
       if (value) SET_BIT(PORTA, pin & 0x7); else CLR_BIT(PORTA, pin & 0x7);
-      UART::uart_printf_P(PSTR("called: digitalWrite A\r\n"));
       break;
     case 0x2:
       if (value) SET_BIT(PORTB, pin & 0x7); else CLR_BIT(PORTB, pin & 0x7);
-      UART::uart_printf_P(PSTR("called: digitalWrite B\r\n"));
       break;
     case 0x4:
       if (value) SET_BIT(PORTC, pin & 0x7); else CLR_BIT(PORTC, pin & 0x7);
-      UART::uart_printf_P(PSTR("called: digitalWrite C\r\n"));
       break;
     case 0x8:
       if (value) SET_BIT(PORTD, pin & 0x7); else CLR_BIT(PORTD, pin & 0x7);
-      UART::uart_printf_P(PSTR("called: digitalWrite D\r\n"));
       break;
   }
-  //UART::uart_printf_P(PSTR("called: digitalWrite\r\n"));
 }
 
-uint8_t digitalRead(uint8_t pin) {
+uint8_t IO::digitalRead(uint8_t pin) {
+  //UART::uart_printf_P(PSTR("called: digitalRead(pin==%d, port==%d, mode==%d)\r\n"), pin&0x7, pin>>4);
   switch (pin>>4) {
     case 0x1:
       return (BIT_IS_SET(PINA, pin & 0x7));
     case 0x2:
       return (BIT_IS_SET(PINB, pin & 0x7));
     case 0x4:
-      return (BIT_IS_SET(PINC, pin &0x7));
+      return (BIT_IS_SET(PINC, pin & 0x7));
     case 0x8:
-      return (BIT_IS_SET(PIND, pin &0x7));
+      return (BIT_IS_SET(PIND, pin & 0x7));
   }
-  //UART::uart_printf_P(PSTR("called: digitalRead\r\n"));
   return 0;
 }
 
-void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {
+void IO::tone(uint8_t pin, unsigned int frequency, unsigned long duration) {
+  // not required!
   UART::uart_printf_P(PSTR("called: tone\r\n"));
 }
 
-void noTone(uint8_t pin) {
+void IO::noTone(uint8_t pin) {
+  // not required!
   UART::uart_printf_P(PSTR("called: noTone\r\n"));
 }
 
-void attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode) {
-  UART::uart_printf_P(PSTR("called: attachInterrupt\r\n"));
+void IO::attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode) {
+  UART::uart_printf_P(PSTR("called: attachInterrup\r\n"));
+  if (interrupt < 3 && userFunction && (mode==FALLING || mode==RISING || mode==CHANGE)) {
+    IO::intFunc[interrupt] = userFunction;
+    switch (interrupt) {
+      case (0):
+        MCUCR = (MCUCR & ~((1 << ISC00) | (1 << ISC01))) | (mode << ISC00);
+        GICR |= (1 << INT0);
+        break;
+      case (1):
+        MCUCR = (MCUCR & ~((1 << ISC10) | (1 << ISC11))) | (mode << ISC10);
+        GICR |= (1 << INT1);
+        break;
+      case (2):
+        CLR_BIT(GICR, INT2);
+        if (mode==RISING) SET_BIT(MCUCSR, ISC2);
+        if (mode==FALLING) CLR_BIT(MCUCSR, ISC2);
+        SET_BIT(GICR, INT2);
+        break;
+    }
+  }
 }
 
-void detachInterrupt(uint8_t intterupt) {
-  UART::uart_printf_P(PSTR("called: detachInterrupt\r\n"));
+void IO::detachInterrupt(uint8_t interrupt) {
+  if (interrupt < 3) {
+    switch (interrupt) {
+      case (0):
+        GICR &= ~(1 << INT0);
+        break;
+      case (1):
+        GICR &= ~(1 << INT1);
+        break;
+      case (2):
+        GICR &= ~(1 << INT2);
+        break;
+    }
+    IO::intFunc[interrupt] = IO::nothing;
+  }
 }
 
-void yield() {
-  // does nothing opn this platform
+void IO::nothing(void) {
 }
 
-void delay(unsigned long ms) {
-  uint32_t start = micros();
+volatile voidFuncPtr IO::intFunc[3] = {IO::nothing,IO::nothing,IO::nothing};
 
-	while (ms > 0) {
-		while ( ms > 0 && (micros() - start) >= 1000) {
-			ms--;
-			start += 1000;
-		}
-	}
+ISR(INT0_vect) {
+  IO::intFunc[0]();
 }
 
-void delayMicroseconds(unsigned int us) {
-  if (us <= 1) return;
-  us <<= 2; // convert us into cycles: 1 us == 4 cycles
-  // busy wait
-	__asm__ __volatile__ (
-		"1: sbiw %0,1" "\n\t" // 2 cycles
-		"brne 1b" : "=w" (us) : "0" (us) // 2 cycles
-	);
+ISR(INT1_vect) {
+  IO::intFunc[1]();
 }
 
-unsigned long millis() {
-  unsigned long m;
-	uint8_t oldSREG = SREG;
-	cli();
-	m = _millis;
-	SREG = oldSREG;
-
-	return m;
+ISR(INT2_vect) {
+  IO::intFunc[2]();
 }
 
-unsigned long micros() {
-  unsigned long m;
-	uint8_t oldSREG = SREG, t;
-	cli();
-	m = _overflow_count;
-	t = TCNT0;
-	if ((TIFR & _BV(TOV0)) && (t < 255)) m++;
-	SREG = oldSREG;
-	return ((m << 8) + t) * 4;
+void SPI::SPIbegin() {
+  // not required?
+  //UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
 }
 
-void SPIbegin() {
-  UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
+void SPI::SPIbeginTransaction() {
+  //DDRB = (1<<DDB5)|(1<<DDB4)|(1<<DDB7);
+  DDRB = 0b10111010;
+
+  SPCR = (1<<SPE) | (1<<MSTR) | (1<<SPR0); // 0=SPI no interrupt, 1=SPI enabled, 0=MSB-Fist, 1=Master, 00=SPI Mode 0, 01=div:8 (with SPI2X=1)
+  //SPCR = 0b01010011;
+  SET_BIT(SPSR, SPI2X);
 }
 
-void SPIbeginTransaction() {
-  UART::uart_printf_P(PSTR("called: SPIbeginTransaction\r\n"));
+// Write to the SPI bus (MOSI pin) and also receive (MISO pin)
+uint8_t SPI::SPItransfer(uint8_t data) {
+  //UART::uart_printf_P(PSTR("called: SPItransfer\r\n"));
+  SPDR = data;
+  /*
+    * The following NOP introduces a small delay that can prevent the wait
+    * loop form iterating when running at the maximum speed. This gives
+    * about 10% more speed, even if it seems counter-intuitive. At lower
+    * speeds it is unnoticed.
+    */
+  asm volatile("nop");
+  while (!(SPSR & _BV(SPIF))) ; // wait
+  //UART::uart_printf_P(PSTR("SPItransfer returns: %x\r\n"),SPDR);
+  return SPDR;
 }
 
-uint8_t SPItransfer (uint8_t b) {
-  UART::uart_printf_P(PSTR("called: SPItransfer\r\n"));
-  return 0;
+
+// After performing a group of transfers and releasing the chip select
+// signal, this function allows others to access the SPI bus
+void SPI::SPIendTransaction(void) {
+  //UART::uart_printf_P(PSTR("called: SPIendTransaction\r\n"));
 }
 
-void SPIendTransaction() {
-  UART::uart_printf_P(PSTR("called: SPIendTransaction\r\n"));
-}
-
-void SPIend() {
+void SPI::SPIend() {
+  // not required?
   UART::uart_printf_P(PSTR("called: SPIend\r\n"));
 }
 
-/************************ ISR timer0 *****************/
-ISR(TIMER0_OVF_vect) {
-  _millis = _millis + MILLISECONDS_PER_TIMER0_OVERFLOW;
-  _fract = _fract + FRACT_INC;
 
-  if (_fract >= FRACT_MAX) {
-    _fract = _fract - FRACT_MAX;
-    _millis++;
-  }
-
-  _overflow_count++;
-}
+//static void yield() {
+  // not required!
+  // does nothing opn this platform
+//}
