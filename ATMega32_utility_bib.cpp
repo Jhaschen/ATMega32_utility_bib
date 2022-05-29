@@ -269,7 +269,7 @@ uint8_t IO::digitalPinToInterrupt(uint8_t interruptPin) {
 }
 
 void IO::pinMode(uint8_t pin, uint8_t mode) {
-  //UART::uart_printf_P(PSTR("called: pinMode(pin==%d, port==%d, mode==%d)\r\n"), pin&0x7, pin>>4, mode);
+  UART::uart_printf_P(PSTR("called: pinMode(pin==%d, port==%d, mode==%d)\r\n"), pin&0x7, pin>>4, mode);
   switch (pin>>4) {
     case 0x1:
       if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRA, pin & 0x07);
@@ -377,6 +377,7 @@ void IO::detachInterrupt(uint8_t interrupt) {
 }
 
 void IO::nothing(void) {
+  // do nothing
 }
 
 volatile voidFuncPtr IO::intFunc[3] = {IO::nothing,IO::nothing,IO::nothing};
@@ -395,16 +396,16 @@ ISR(INT2_vect) {
 
 void SPI::SPIbegin() {
   // not required?
-  //UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
+  UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
 }
 
 void SPI::SPIbeginTransaction() {
-  //DDRB = (1<<DDB5)|(1<<DDB4)|(1<<DDB7);
-  DDRB = 0b10111010;
+  // MOSI, SCK, and NSS: output
+  DDRB |= ((1<<DDB7)|(1<<DDB5)|(1<<DDB4));
 
   SPCR = (1<<SPE) | (1<<MSTR) | (1<<SPR0); // 0=SPI no interrupt, 1=SPI enabled, 0=MSB-Fist, 1=Master, 00=SPI Mode 0, 01=div:8 (with SPI2X=1)
-  //SPCR = 0b01010011;
   SET_BIT(SPSR, SPI2X);
+
 }
 
 // Write to the SPI bus (MOSI pin) and also receive (MISO pin)

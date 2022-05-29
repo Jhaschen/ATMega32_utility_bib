@@ -37,13 +37,13 @@
 #include <stdlib.h>
 
 // Makro definitionen
-#define SET_BIT(REG, BIT) REG |= (1 << (BIT))            // Makro setzen des Bit BIT in Register REG
-#define CLR_BIT(REG, BIT) REG &= ~(1 << (BIT))           // Makro löschen des Bit BIT in Register REG
-#define TGL_BIT(REG, BIT) REG ^= (1 << (BIT))            // Makro komplemntieren des Bit BIT in Register REG
-#define CLR_LED(REG, BIT) REG |= (1 << (BIT))            // Makro LED ausschalten (umgekehrte Logik)
-#define SET_LED(REG, BIT) REG &= ~(1 << (BIT))           // Makro LED einschalten
-#define BIT_IS_SET(REG, BIT) ((REG & (1 << (BIT))) != 0) // Testen, ob Bit BIT im Register REG gesetzt ist (1)
-#define BIT_IS_CLR(REG, BIT) ((REG & (1 << (BIT))) == 0) // Testen, ob Bit BIT im Register REG  nicht gesetzt ist (0)
+#define SET_BIT(REG, BIT) ((REG) |= (1 << (BIT)))          // Makro setzen des Bit BIT in Register REG
+#define CLR_BIT(REG, BIT) ((REG) &= ~(1 << (BIT)))         // Makro löschen des Bit BIT in Register REG
+#define TGL_BIT(REG, BIT) ((REG) ^= (1 << (BIT)))          // Makro komplemntieren des Bit BIT in Register REG
+#define CLR_LED(REG, BIT) ((REG) |= (1 << (BIT)))          // Makro LED ausschalten (umgekehrte Logik)
+#define SET_LED(REG, BIT) ((REG) &= ~(1 << (BIT)))         // Makro LED einschalten
+#define BIT_IS_SET(REG, BIT) (((REG) & (1 << (BIT))) != 0) // Testen, ob Bit BIT im Register REG gesetzt ist (1)
+#define BIT_IS_CLR(REG, BIT) (((REG) & (1 << (BIT))) == 0) // Testen, ob Bit BIT im Register REG  nicht gesetzt ist (0)
 
 #define LED_PORT PORTC
 
