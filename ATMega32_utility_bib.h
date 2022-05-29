@@ -205,6 +205,9 @@ public:
   static volatile voidFuncPtr intFunc[3];
 
   static void nothing(); // bogus function, if no real function is attached
+private:
+  static uint8_t _pinToPortAddress(uint8_t pin);
+  static uint8_t _pinToDDRAddress(uint8_t pin);
 };
 
 // Arduino compatibility functions:

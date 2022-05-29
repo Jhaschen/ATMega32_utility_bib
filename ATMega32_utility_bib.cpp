@@ -268,47 +268,46 @@ uint8_t IO::digitalPinToInterrupt(uint8_t interruptPin) {
   return 0xFF;
 }
 
-void IO::pinMode(uint8_t pin, uint8_t mode) {
-  UART::uart_printf_P(PSTR("called: pinMode(pin==%d, port==%d, mode==%d)\r\n"), pin&0x7, pin>>4, mode);
+uint8_t IO::_pinToPortAddress(uint8_t pin) {
   switch (pin>>4) {
     case 0x1:
-      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRA, pin & 0x07);
-      else if (mode==OUTPUT) SET_BIT(DDRA, pin & 0x07);
-      if (mode==INPUT_PULLUP) SET_BIT(PORTA, pin & 0x07);
-      break;
+    return 0x1B; // PORTA
     case 0x2:
-      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRB, pin & 0x07);
-      else if (mode==OUTPUT) SET_BIT(DDRB, pin & 0x07);
-      if (mode==INPUT_PULLUP) SET_BIT(PORTB, pin & 0x07);
-      break;
+    return 0x18; // PORTB
     case 0x4:
-      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRC, pin & 0x07);
-      else if (mode==OUTPUT) SET_BIT(DDRC, pin & 0x07);
-      if (mode==INPUT_PULLUP) SET_BIT(PORTC, pin & 0x07);
-      break;
+    return 0x15; // PORTC
     case 0x8:
-      if (mode==INPUT || mode==INPUT_PULLUP) CLR_BIT(DDRD, pin & 0x07);
-      else if (mode==OUTPUT) SET_BIT(DDRD, pin & 0x07);
-      if (mode==INPUT_PULLUP) SET_BIT(PORTD, pin & 0x07);
+    return 0x12; // PORTD
   }
+  return 0;
+}
+
+uint8_t IO::_pinToDDRAddress(uint8_t pin) {
+  switch (pin>>4) {
+    case 0x1:
+    return 0x1A; // DDRA
+    case 0x2:
+    return 0x17; // DDRB
+    case 0x4:
+    return 0x14; // DDRC
+    case 0x8:
+    return 0x11; // DDRD
+  }
+  return 0;
+}
+
+void IO::pinMode(uint8_t pin, uint8_t mode) {
+  //UART::uart_printf_P(PSTR("called: pinMode(pin==%d, port==%d, mode==%d)\r\n"), pin&0x7, pin>>4, mode);
+  if (mode==INPUT || mode==INPUT_PULLUP) {
+    CLR_BIT(_SFR_IO8(_pinToDDRAddress(pin)), pin & 0x07);
+    if (mode==INPUT_PULLUP) SET_BIT(_SFR_IO8(_pinToPortAddress(pin)), pin & 0x07);
+  } else if (mode==OUTPUT) SET_BIT(_SFR_IO8(_pinToDDRAddress(pin)), pin & 0x07);
+  
 }
 
 void IO::digitalWrite(uint8_t pin, uint8_t value) {
   //UART::uart_printf_P(PSTR("called: digitalWrite(pin==%d, port==%d, val==%d)\r\n"), pin&0x7, pin>>4, value);
-  switch (pin>>4) {
-    case 0x1:
-      if (value) SET_BIT(PORTA, pin & 0x7); else CLR_BIT(PORTA, pin & 0x7);
-      break;
-    case 0x2:
-      if (value) SET_BIT(PORTB, pin & 0x7); else CLR_BIT(PORTB, pin & 0x7);
-      break;
-    case 0x4:
-      if (value) SET_BIT(PORTC, pin & 0x7); else CLR_BIT(PORTC, pin & 0x7);
-      break;
-    case 0x8:
-      if (value) SET_BIT(PORTD, pin & 0x7); else CLR_BIT(PORTD, pin & 0x7);
-      break;
-  }
+  if (value) SET_BIT(_SFR_IO8(_pinToPortAddress(pin)), pin & 0x7); else CLR_BIT(_SFR_IO8(_pinToPortAddress(pin)), pin & 0x7);
 }
 
 uint8_t IO::digitalRead(uint8_t pin) {
