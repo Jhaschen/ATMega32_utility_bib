@@ -1,4 +1,4 @@
- # Hey Emacs, this is a -*- makefile -*-
+# Hey Emacs, this is a -*- makefile -*-
 #----------------------------------------------------------------------------
 # WinAVR Makefile Template written by Eric B. Weddington, Jörg Wunsch, et al.
 #
@@ -28,7 +28,7 @@
 # make program = Download the hex file to the device, using avrdude.
 #                Please customize the avrdude settings below first!
 #
-# make debug = Start either simulavr or avarice as specified for debugging,
+# make debug = Start either simulavr or avarice as specified for debugging, 
 #              with avr-gdb or avr-insight as the front end for debugging.
 #
 # make filename.s = Just compile filename.c into the assembler code only.
@@ -44,8 +44,8 @@
 MCU = atmega32
 
 # Processor frequency.
-#     This will define a symbol, F_CPU, in all source code files equal to the
-#     processor frequency. You can then use this symbol in your source code to
+#     This will define a symbol, F_CPU, in all source code files equal to the 
+#     processor frequency. You can then use this symbol in your source code to 
 #     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
 #     automatically to create a 32-bit value in your source code.
 #     Typical values are:
@@ -79,10 +79,8 @@ OBJDIR = obj
 # List C source files here. (C dependencies are automatically generated.)
 SRC =
 
-
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = main.cpp ATMega32_utility_bib.cpp
-
 
 # List Assembler source files here.
 #     Make them always end in a capital .S.  Files ending in a lowercase .s
@@ -94,7 +92,7 @@ CPPSRC = main.cpp ATMega32_utility_bib.cpp
 ASRC =
 
 
-# Optimization level, can be [0, 1, 2, 3, s].
+# Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
 OPT = s
@@ -110,7 +108,7 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS =
+EXTRAINCDIRS = ATMega32_utility_bib
 
 
 # Compiler flag to set the C Standard level.
@@ -119,6 +117,9 @@ EXTRAINCDIRS =
 #     c99   = ISO C99 standard (not yet fully implemented)
 #     gnu99 = c99 plus GCC extensions
 CSTANDARD = -std=gnu99
+
+# Compiler flag to set the C Standard level.
+CPPSTANDARD = -std=c++11
 
 
 # Place -D or -U options here for C sources
@@ -176,6 +177,10 @@ CPPFLAGS += -funsigned-bitfields
 CPPFLAGS += -fpack-struct
 CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
+CPPFLAGS += -fno-exceptions
+CPPFLAGS += -ffunction-sections
+CPPFLAGS += -fdata-sections
+CPPFLAGS += -fno-threadsafe-statics
 #CPPFLAGS += -fno-unit-at-a-time
 CPPFLAGS += -Wall
 #CPPFLAGS += -Wstrict-prototypes
@@ -184,6 +189,7 @@ CFLAGS += -Wundef
 #CPPFLAGS += -Wsign-compare
 CPPFLAGS += -Wa,-adhlns=$(<:%.cpp=$(OBJDIR)/%.lst)
 CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
+CPPFLAGS += $(CPPSTANDARD)
 #CPPFLAGS += $(CSTANDARD)
 
 
@@ -194,7 +200,7 @@ CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 #             for use in COFF files, additional information about filenames
 #             and function names needs to be present in the assembler source
 #             files -- see avr-libc docs [FIXME: not yet described there]
-ASFLAGS = -Wa,-adhlns=$(<:%.S=$(OBJDIR)/%.lst),-gstabs
+ASFLAGS = -Wa,-adhlns=$(<:%.S=$(OBJDIR)/%.lst),-gstabs 
 
 
 #---------------- Library Options ----------------
@@ -205,9 +211,9 @@ PRINTF_LIB_MIN = -Wl,-u,vfprintf -lprintf_min
 PRINTF_LIB_FLOAT = -Wl,-u,vfprintf -lprintf_flt
 
 # If this is left blank, then it will use the Standard printf version.
-PRINTF_LIB =
+#PRINTF_LIB = 
 #PRINTF_LIB = $(PRINTF_LIB_MIN)
-#PRINTF_LIB = $(PRINTF_LIB_FLOAT)
+PRINTF_LIB = $(PRINTF_LIB_FLOAT)
 
 
 # Minimalistic scanf version
@@ -217,7 +223,7 @@ SCANF_LIB_MIN = -Wl,-u,vfscanf -lscanf_min
 SCANF_LIB_FLOAT = -Wl,-u,vfscanf -lscanf_flt
 
 # If this is left blank, then it will use the Standard scanf version.
-SCANF_LIB =
+SCANF_LIB = 
 #SCANF_LIB = $(SCANF_LIB_MIN)
 #SCANF_LIB = $(SCANF_LIB_FLOAT)
 
@@ -244,7 +250,7 @@ EXTMEMOPTS =
 #  -Wl,...:     tell GCC to pass this to linker.
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS = -Wl,-Map=$(TARGET).map,--cref,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
@@ -253,7 +259,7 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 #---------------- Programming Options (avrdude) ----------------
 
-# Programming hardware: alf avr910 avrisp bascom bsd
+# Programming hardware: alf avr910 avrisp bascom bsd 
 # dt006 pavr picoweb pony-stk200 sp12 stk200 stk500
 #
 # Type: avrdude -c ?
@@ -262,11 +268,10 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 AVRDUDE_PROGRAMMER = stk500v2
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
-AVRDUDE_PORT = /dev/tty.usbmodem11301
+AVRDUDE_PORT = /dev/ttyACM0
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
-
 
 # Uncomment the following if you want avrdude's erase cycle counter.
 # Note that this counter needs to be initialized first using -Yn,
@@ -278,7 +283,7 @@ AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 #AVRDUDE_NO_VERIFY = -V
 
 # Increase verbosity level.  Please use this when submitting bug
-# reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude>
+# reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
 
@@ -312,7 +317,7 @@ JTAG_DEV = /dev/com1
 DEBUG_PORT = 4242
 
 # Debugging host used to communicate between GDB / avarice / simulavr, normally
-#     just set to localhost unless doing some sort of crazy debugging when
+#     just set to localhost unless doing some sort of crazy debugging when 
 #     avarice is running on a different computer.
 DEBUG_HOST = localhost
 
@@ -324,6 +329,7 @@ DEBUG_HOST = localhost
 # Define programs and commands.
 SHELL = sh
 CC = avr-gcc
+CPP = avr-g++
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 SIZE = avr-size
@@ -340,7 +346,7 @@ WINSHELL = cmd
 MSG_ERRORS_NONE = Errors: none
 MSG_BEGIN = -------- begin --------
 MSG_END = --------  end  --------
-MSG_SIZE_BEFORE = Size before:
+MSG_SIZE_BEFORE = Size before: 
 MSG_SIZE_AFTER = Size after:
 MSG_COFF = Converting to AVR COFF:
 MSG_EXTENDED_COFF = Converting to AVR Extended COFF:
@@ -359,10 +365,10 @@ MSG_CREATING_LIBRARY = Creating library:
 
 
 # Define all object files.
-OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o)
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
 
 # Define all listing files.
-LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst)
+LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
 
 
 # Compiler flags to generate dependency files.
@@ -426,21 +432,21 @@ sizeafter:
 
 
 # Display compiler version information.
-gccversion :
+gccversion : 
 	@$(CC) --version
 
 
 
-# Program the device.
+# Program the device.  
 program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 	$(AVRDUDE_WRITE_EEPROM)
 
 
 # Generate avr-gdb config/init file which does the following:
-#     define the reset signal, load the target file, connect to target, and set
+#     define the reset signal, load the target file, connect to target, and set 
 #     a breakpoint at main().
-gdb-config:
+gdb-config: 
 	@$(REMOVE) $(GDBINIT_FILE)
 	@echo define reset >> $(GDBINIT_FILE)
 	@echo SIGNAL SIGHUP >> $(GDBINIT_FILE)
@@ -538,6 +544,7 @@ extcoff: $(TARGET).elf
 $(OBJDIR)/%.o : %.c
 	@echo
 	@echo $(MSG_COMPILING) $<
+	@mkdir -p $(@D)
 	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 
@@ -545,7 +552,8 @@ $(OBJDIR)/%.o : %.c
 $(OBJDIR)/%.o : %.cpp
 	@echo
 	@echo $(MSG_COMPILING_CPP) $<
-	$(CC) -c $(ALL_CPPFLAGS) $< -o $@
+	@mkdir -p $(@D)
+	$(CPP) -c $(ALL_CPPFLAGS) $< -o $@
 
 
 # Compile: create assembler files from C source files.
@@ -562,6 +570,7 @@ $(OBJDIR)/%.o : %.cpp
 $(OBJDIR)/%.o : %.S
 	@echo
 	@echo $(MSG_ASSEMBLING) $<
+	@mkdir -p $(@D)
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 

@@ -47,11 +47,17 @@ void ADC_read::init(uint8_t _channel){
      return adc_value;
  }
 
+
+void Button::init()
+{
+    ADC_read::init(7); // ADC mit channel 7 initialisieren
+}
+
+
 int8_t Button::Button_read(void)
 {
  int8_t button_pressed=-1;
 
- ADC_read::init(7);
  uint16_t analog7 = ADC_read::adc_value(); //ADC Wert lesen und zwischenspeichern
 
  // Prüfe, welcher Taster gedrückt wurde (Spannungsteiler)
@@ -302,7 +308,6 @@ void IO::pinMode(uint8_t pin, uint8_t mode) {
     CLR_BIT(_SFR_IO8(_pinToDDRAddress(pin)), pin & 0x07);
     if (mode==INPUT_PULLUP) SET_BIT(_SFR_IO8(_pinToPortAddress(pin)), pin & 0x07);
   } else if (mode==OUTPUT) SET_BIT(_SFR_IO8(_pinToDDRAddress(pin)), pin & 0x07);
-  
 }
 
 void IO::digitalWrite(uint8_t pin, uint8_t value) {
