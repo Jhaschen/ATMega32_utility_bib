@@ -9,66 +9,64 @@
 #include "ATMega32_utility_bib.h"
 #include "user_button_values.h"
 
-
 uint8_t ADC_read::channel; 
 
 void ADC_read::init(uint8_t _channel){
-   channel=_channel;
- }
+    channel=_channel;
+}
 
- uint16_t ADC_read::adc_value(void)
- {
-   // PIN 7 als Eingang
-   CLR_BIT(DDRA,channel);
-   //Pullup setzen
-   SET_BIT(PORTA,channel);
-   uint16_t adc_value=0;
-   // ADC init
-   // REFS1:0 = 00 => AREF externe Referenzspannung (=5V beim RNCTRL1.4)
-   // ADMUX Kanal 7 PINA7 = > MUX0:1:2 == 1
-   uint8_t ADCChan= channel;
-   ADMUX =(ADMUX & 0b11100000) | ( ADCChan & 0b00011111) ;// AD Multiplexer
+uint16_t ADC_read::adc_value(void)
+{
+  // PIN 7 als Eingang
+  CLR_BIT(DDRA,channel);
+  //Pullup setzen
+  SET_BIT(PORTA,channel);
+  uint16_t adc_value=0;
+  // ADC init
+  // REFS1:0 = 00 => AREF externe Referenzspannung (=5V beim RNCTRL1.4)
+  // ADMUX Kanal 7 PINA7 = > MUX0:1:2 == 1
+  uint8_t ADCChan= channel;
+  ADMUX =(ADMUX & 0b11100000) | ( ADCChan & 0b00011111) ;// AD Multiplexer
 
+  // ADEN (ADC Enable )  = 1 => AD-Wandler freigeben
+  // ADSC (ADC Start Conversion)= 1 => AD-Wandlung starten
+  //ADPS ()ADC Prescaler) 0-2 = 111 => Taktvorteiler 128
+  // Muss so eingestellt werden, dass der Wandlertakt des ADC 50...200kHz
+  ADCSRA = (1<<ADEN) | ( 1<<ADSC) | (1<< ADPS2) | (1<< ADPS1) | (1<< ADPS0) ;  // Statusregister A
 
-   // ADEN (ADC Enable )  = 1 => AD-Wandler freigeben
-   // ADSC (ADC Start Conversion)= 1 => AD-Wandlung starten
-   //ADPS ()ADC Prescaler) 0-2 = 111 => Taktvorteiler 128
-   // Muss so eingestellt werden, dass der Wandlertakt des ADC 50...200kHz
-   ADCSRA = (1<<ADEN) | ( 1<<ADSC) | (1<< ADPS2) | (1<< ADPS1) | (1<< ADPS0) ;  // Statusregister A
-
-   // AD-Wandlung starten
-   SET_BIT(ADCSRA,ADSC);
+  // AD-Wandlung starten
+  SET_BIT(ADCSRA,ADSC);
 
   // Warten bis die AD-Wandlung abgeschlossen ist
-    while(BIT_IS_CLR(ADCSRA,ADIF)){}    // ADIF (ADC Interrupt Flag) wird gesetzt, wenn Wandlung angechlossen ist.
+  while(BIT_IS_CLR(ADCSRA,ADIF)){}    // ADIF (ADC Interrupt Flag) wird gesetzt, wenn Wandlung angechlossen ist.
 
-     adc_value=ADCW;
+  adc_value=ADCW;
 
-     return adc_value;
- }
+  return adc_value;
+}
 
 
 void Button::init()
 {
-    ADC_read::init(7); // ADC mit channel 7 initialisieren
+  ADC_read::init(7); // ADC mit channel 7 initialisieren
 }
 
 
 int8_t Button::Button_read(void)
 {
- int8_t button_pressed=-1;
+  int8_t button_pressed=-1;
 
- uint16_t analog7 = ADC_read::adc_value(); //ADC Wert lesen und zwischenspeichern
+  uint16_t analog7 = ADC_read::adc_value(); //ADC Wert lesen und zwischenspeichern
 
- // Prüfe, welcher Taster gedrückt wurde (Spannungsteiler)
-   if      ( (analog7 >= ATMEGA32_USER_BUTTON1_LOW) && (analog7 <= ATMEGA32_USER_BUTTON1_HIGH ) ) {button_pressed = 1;}
-   else if ( (analog7 >= ATMEGA32_USER_BUTTON2_LOW) && (analog7 <= ATMEGA32_USER_BUTTON2_HIGH ) ) {button_pressed = 2;}
-   else if ( (analog7 >= ATMEGA32_USER_BUTTON3_LOW) && (analog7 <= ATMEGA32_USER_BUTTON3_HIGH) ) {button_pressed = 3;}
-   else if ( (analog7 >= ATMEGA32_USER_BUTTON4_LOW) && (analog7 <= ATMEGA32_USER_BUTTON4_HIGH) ) {button_pressed= 4;}
-   else if ( (analog7 >= ATMEGA32_USER_BUTTON5_LOW) && (analog7 <= ATMEGA32_USER_BUTTON5_HIGH) ) {button_pressed= 5;}
-   else {button_pressed=-1;}
+  // Prüfe, welcher Taster gedrückt wurde (Spannungsteiler)
+  if      ( (analog7 >= ATMEGA32_USER_BUTTON1_LOW) && (analog7 <= ATMEGA32_USER_BUTTON1_HIGH ) ) {button_pressed = 1;}
+  else if ( (analog7 >= ATMEGA32_USER_BUTTON2_LOW) && (analog7 <= ATMEGA32_USER_BUTTON2_HIGH ) ) {button_pressed = 2;}
+  else if ( (analog7 >= ATMEGA32_USER_BUTTON3_LOW) && (analog7 <= ATMEGA32_USER_BUTTON3_HIGH) ) {button_pressed = 3;}
+  else if ( (analog7 >= ATMEGA32_USER_BUTTON4_LOW) && (analog7 <= ATMEGA32_USER_BUTTON4_HIGH) ) {button_pressed= 4;}
+  else if ( (analog7 >= ATMEGA32_USER_BUTTON5_LOW) && (analog7 <= ATMEGA32_USER_BUTTON5_HIGH) ) {button_pressed= 5;}
+  else {button_pressed=-1;}
 
-   return button_pressed;
+  return button_pressed;
 }
 
 //UART Schnittstelle
@@ -168,24 +166,23 @@ void UART::uart_printf_P(const char* format, ...)
 
 void UART::uart_puts(const char* pstring)
 {
- while (*pstring !=0) {
-   uart_putc(*pstring);
-   pstring++;
- }
+  while (*pstring !=0) {
+    uart_putc(*pstring);
+    pstring++;
+  }
 }
 
 void UART::uart_println(const char* pstring)
- {
-   uart_puts(pstring);
-   uart_puts("\r\n");
- }
+{
+  uart_puts(pstring);
+  uart_puts("\r\n");
+}
 
- char UART::uart_getc(void)
- {
+char UART::uart_getc(void)
+{
   char data;
   // Prüfe ob das Empfangsregister gefüllt ist
   while (BIT_IS_CLR(UCSRA,RXC)) {
-   /* code */
   }
   //Daten einlesen
   data=UDR;
@@ -261,8 +258,44 @@ unsigned long Timer0::micros() {
 }
 
 
+const uint16_t Beeper::_prescalers[7]     = {1,     8,  32,  64, 128, 256, 1024};
+const uint8_t  Beeper::_prescaler_bits[7] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6,  0x7};
+
+void Beeper::init() {
+  IO::pinMode(PIN_PD7, OUTPUT);
+
+  //Wave Form Generation Mode -> CTC
+  CLR_BIT(TCCR2, WGM20);
+  SET_BIT(TCCR2, WGM21);
+
+  //Toggle OC2 on Compare Match
+  SET_BIT(TCCR2, COM20);
+  CLR_BIT(TCCR2, COM21);
+}
+
+void Beeper::beep(uint16_t freq) {
+  // min frequency is 31 Hz!
+  if (freq < 32) freq = 31;
+  uint32_t temp_OCR2 = 0;
+
+  for (uint8_t i=0; i < sizeof(_prescalers); i++)
+  {
+    temp_OCR2 = F_CPU / ((uint32_t) _prescalers[i] * freq * 2);
+    if (temp_OCR2 < 256) {
+      //UART::uart_printf("Freq: %u, Prescaler: %u\r\n", freq, i);
+      TCCR2= (TCCR2 & ~(0x7)) | _prescaler_bits[i];
+      OCR2 = (uint8_t) temp_OCR2;
+      break;
+    }       
+  }
+}
+  
+void Beeper::noBeep() {
+  TCCR2 = (TCCR2 & ~(0x7)); // keine Taktquelle ausgewählt!
+}
+
 uint8_t IO::digitalPinToInterrupt(uint8_t interruptPin) {
-  UART::uart_printf_P(PSTR("called: digitalPinToInterrupt\r\n"));
+  //UART::uart_printf_P(PSTR("called: digitalPinToInterrupt\r\n"));
   switch (interruptPin) {
     case PIN_PD2:
       return 0;
@@ -285,7 +318,7 @@ uint8_t IO::_pinToPortAddress(uint8_t pin) {
     case 0x8:
     return 0x12; // PORTD
   }
-  return 0;
+  return 0xFF;
 }
 
 uint8_t IO::_pinToDDRAddress(uint8_t pin) {
@@ -299,7 +332,7 @@ uint8_t IO::_pinToDDRAddress(uint8_t pin) {
     case 0x8:
     return 0x11; // DDRD
   }
-  return 0;
+  return 0xFF;
 }
 
 void IO::pinMode(uint8_t pin, uint8_t mode) {
@@ -341,7 +374,7 @@ void IO::noTone(uint8_t pin) {
 }
 
 void IO::attachInterrupt(uint8_t interrupt, void(*userFunction)(void),  uint8_t mode) {
-  UART::uart_printf_P(PSTR("called: attachInterrup\r\n"));
+  //UART::uart_printf_P(PSTR("called: attachInterrup\r\n"));
   if (interrupt < 3 && userFunction && (mode==FALLING || mode==RISING || mode==CHANGE)) {
     IO::intFunc[interrupt] = userFunction;
     switch (interrupt) {
@@ -400,16 +433,14 @@ ISR(INT2_vect) {
 
 void SPI::SPIbegin() {
   // not required?
-  UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
+  //UART::uart_printf_P(PSTR("called: SPIbegin\r\n"));
 }
 
 void SPI::SPIbeginTransaction() {
   // MOSI, SCK, and NSS: output
   DDRB |= ((1<<DDB7)|(1<<DDB5)|(1<<DDB4));
-
   SPCR = (1<<SPE) | (1<<MSTR) | (1<<SPR0); // 0=SPI no interrupt, 1=SPI enabled, 0=MSB-Fist, 1=Master, 00=SPI Mode 0, 01=div:8 (with SPI2X=1)
   SET_BIT(SPSR, SPI2X);
-
 }
 
 // Write to the SPI bus (MOSI pin) and also receive (MISO pin)
@@ -437,7 +468,7 @@ void SPI::SPIendTransaction(void) {
 
 void SPI::SPIend() {
   // not required?
-  UART::uart_printf_P(PSTR("called: SPIend\r\n"));
+  //UART::uart_printf_P(PSTR("called: SPIend\r\n"));
 }
 
 

@@ -181,6 +181,17 @@ public:
   volatile static unsigned char _fract;
 };
 
+class Beeper
+{
+public:
+  static void init();
+  static void beep(uint16_t freq);
+  static void noBeep();
+private:
+  static const uint16_t _prescalers[7];
+  static const uint8_t  _prescaler_bits[7];
+};
+
 class SPI
 {
 public:
