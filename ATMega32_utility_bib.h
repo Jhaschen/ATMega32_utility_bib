@@ -139,10 +139,7 @@ class ADC_read
 {
 public:
   static void init(uint8_t _channel);
-  static uint16_t adc_value(void);
-
-private:
-  static uint8_t channel;
+  static uint16_t adc_value(uint8_t _channel);
 };
 
 // Button einlesen
@@ -151,6 +148,7 @@ class Button
 public:
   static void init();
   static int8_t Button_read(void);
+  static int8_t Button_read_debounced(void);
 };
 
 // UART Schnittstelle

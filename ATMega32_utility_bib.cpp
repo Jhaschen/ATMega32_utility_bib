@@ -9,33 +9,30 @@
 #include "ATMega32_utility_bib.h"
 #include "user_button_values.h"
 
-uint8_t ADC_read::channel; 
-
 void ADC_read::init(uint8_t _channel){
-    channel=_channel;
-}
-
-uint16_t ADC_read::adc_value(void)
-{
   // PIN 7 als Eingang
-  CLR_BIT(DDRA,channel);
+  CLR_BIT(DDRA, _channel);
   //Pullup setzen
-  SET_BIT(PORTA,channel);
-  uint16_t adc_value=0;
+  SET_BIT(PORTA, _channel);
+
   // ADC init
   // REFS1:0 = 00 => AREF externe Referenzspannung (=5V beim RNCTRL1.4)
   // ADMUX Kanal 7 PINA7 = > MUX0:1:2 == 1
-  uint8_t ADCChan= channel;
+  uint8_t ADCChan= _channel;
   ADMUX =(ADMUX & 0b11100000) | ( ADCChan & 0b00011111) ;// AD Multiplexer
 
   // ADEN (ADC Enable )  = 1 => AD-Wandler freigeben
-  // ADSC (ADC Start Conversion)= 1 => AD-Wandlung starten
-  //ADPS ()ADC Prescaler) 0-2 = 111 => Taktvorteiler 128
+  // ADPS ()ADC Prescaler) 0-2 = 111 => Taktvorteiler 128
   // Muss so eingestellt werden, dass der Wandlertakt des ADC 50...200kHz
-  ADCSRA = (1<<ADEN) | ( 1<<ADSC) | (1<< ADPS2) | (1<< ADPS1) | (1<< ADPS0) ;  // Statusregister A
+  ADCSRA = (1<<ADEN) | (1<< ADPS2) | (1<< ADPS1) | (1<< ADPS0) ;  // Statusregister A
+}
 
+uint16_t ADC_read::adc_value(uint8_t channel)
+{
+  uint16_t adc_value=0;
+  // ADSC (ADC Start Conversion)= 1 => AD-Wandlung starten
   // AD-Wandlung starten
-  SET_BIT(ADCSRA,ADSC);
+  SET_BIT(ADCSRA, ADSC);
 
   // Warten bis die AD-Wandlung abgeschlossen ist
   while(BIT_IS_CLR(ADCSRA,ADIF)){}    // ADIF (ADC Interrupt Flag) wird gesetzt, wenn Wandlung angechlossen ist.
@@ -56,7 +53,7 @@ int8_t Button::Button_read(void)
 {
   int8_t button_pressed=-1;
 
-  uint16_t analog7 = ADC_read::adc_value(); //ADC Wert lesen und zwischenspeichern
+  uint16_t analog7 = ADC_read::adc_value(7); //ADC Wert lesen und zwischenspeichern
 
   // Prüfe, welcher Taster gedrückt wurde (Spannungsteiler)
   if      ( (analog7 >= ATMEGA32_USER_BUTTON1_LOW) && (analog7 <= ATMEGA32_USER_BUTTON1_HIGH ) ) {button_pressed = 1;}
@@ -68,6 +65,27 @@ int8_t Button::Button_read(void)
 
   return button_pressed;
 }
+
+
+int8_t Button::Button_read_debounced(void)
+{ 
+  int button_value[3] = {};
+  //in case the button does not give a consistent value,
+  //do max 65535 cycles, then return -2
+  //by the way: gen3 rulez
+  //credits to Christian Werner
+  uint16_t max_cycles_fallback = __UINT16_MAX__;
+  do {
+    button_value[2]=button_value[1];
+    button_value[1]=button_value[0];
+    button_value[0]=Button::Button_read();
+    if (max_cycles_fallback-- == 0) {
+      return -2;
+    }
+  } while (button_value[0] != button_value[1] || button_value[1] != button_value[2]);
+  return button_value[0];
+}
+
 
 //UART Schnittstelle
 void UART::init(uint32_t Baudrate, uint8_t CharBits, uint8_t ParBit, uint8_t StopBits)
