@@ -219,6 +219,12 @@ private:
   static uint8_t _pinToDDRAddress(uint8_t pin);
 };
 
+// Pseudo random number generator init
+class Random {
+public:
+  static void init();
+  static int getRandom(int min, int max);
+};
 // Arduino compatibility functions:
 //static void yield();
  

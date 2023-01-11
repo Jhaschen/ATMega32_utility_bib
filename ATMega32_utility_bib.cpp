@@ -494,3 +494,16 @@ void SPI::SPIend() {
   // not required!
   // does nothing opn this platform
 //}
+
+
+void Random::init() {
+  ADC_read::init(0);
+  unsigned int seed = 0;
+  for (int i = 0; i < 10000; ++i) seed += ADC_read::adc_value(0);
+  srand(seed);
+}
+
+int Random::getRandom(int min, int max) {
+  int range = max - min + 1;
+  return (min + (rand() % range));
+}
